@@ -1,6 +1,6 @@
 {
   "name": "malta-babel",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Malta plugin to transpill on the fly.",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -22,7 +22,7 @@
     "url": "https://github.com/fedeghe/malta-babel/issues"
   },
   "dependencies": {
-    "babel": "^6.5.2",
+    "babel-cli": "^6.18.0",
     "malta": ">=3.0.0"
   },
   "main": "./index.js"
