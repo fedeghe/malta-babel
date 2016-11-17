@@ -24,7 +24,7 @@ function malta_es6(o, options) {
 				self.notifyAndUnlock(start, msg);
 			});
 		} catch (err) {
-			doErr(err);
+			self.doErr(err, o, pluginName);
 		}
 	};
 }
