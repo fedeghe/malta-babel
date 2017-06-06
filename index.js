@@ -28,5 +28,5 @@ function malta_es6(o, options) {
 		}
 	};
 }
-malta_es6.ext = 'js';
+malta_es6.ext = ['js', 'coffee', 'ts'];
 module.exports = malta_es6;
