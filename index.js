@@ -6,20 +6,34 @@ var path = require('path'),
 
 function malta_es6(o, options) {
 
+
 	var self = this,
 		start = new Date(),
 		msg,
-		outname = o.name,
-		pluginName = path.basename(path.dirname(__filename));
-	
+		outname = o.name.replace(/\.(ts|coffee)$/, '.js'),
+		pluginName = path.basename(path.dirname(__filename)),
+		args = [o.name, '-o', outname];
 	options = options || {};
+	if ('plugins' in options) args.push('--plugins', options.plugins);
+	if ('presets' in options) args.push('--presets', options.presets);
 
 	return function (solve, reject){
 		try {
-			var ls = child_process.spawn('babel', [o.name, '--out-file', outname, '--presets', ['es2015']]);
+			var ls = child_process.spawn('babel', args);
 			ls.on('exit', function (code) {
-				o.content = fs.readFileSync(o.name) + "";
-				msg = 'plugin ' + pluginName.white() + ' wrote ' + o.name;
+				if (code == 0) {
+					o.content = fs.readFileSync(outname) + "";
+					msg = 'plugin ' + pluginName.white() + ' wrote ' + outname;
+					fs.unlink(o.name);
+					solve(o);
+					self.notifyAndUnlock(start, msg);
+				}
+			});
+			ls.stderr.on('data', function(err) {
+				console.log("ERROR".red());
+				msg = 'plugin ' + pluginName.white() + ' compilation error';
+				console.log((err+"").white());
+				fs.unlink(o.name);
 				solve(o);
 				self.notifyAndUnlock(start, msg);
 			});
