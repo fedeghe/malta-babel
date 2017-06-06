@@ -5,8 +5,6 @@ var path = require('path'),
 	child_process = require('child_process');
 
 function malta_es6(o, options) {
-
-
 	var self = this,
 		start = new Date(),
 		msg,
