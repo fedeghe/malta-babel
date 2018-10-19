@@ -24,7 +24,7 @@ function malta_es6(o, options) {
 				if (code == 0) {
 					o.content = fs.readFileSync(outname) + "";
 					msg = 'plugin ' + pluginName.white() + ' wrote ' + outname;
-					doDelete && fs.unlink(o.name);
+					doDelete && fs.unlink(o.name, () => {});
 					solve(o);
 					self.notifyAndUnlock(start, msg);
 				}
@@ -33,7 +33,7 @@ function malta_es6(o, options) {
 				console.log("ERROR".red());
 				msg = 'plugin ' + pluginName.white() + ' compilation error';
 				console.log((err+"").white());
-				doDelete && fs.unlink(o.name);
+				doDelete && fs.unlink(o.name, () => {});
 				solve(o);
 				self.notifyAndUnlock(start, msg);
 			});
