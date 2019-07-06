@@ -34,7 +34,7 @@ function malta_es6(o, options) {
 				msg = 'plugin ' + pluginName.white() + ' compilation error';
 				console.log((err+"").white());
 				doDelete && fs.unlink(o.name, () => {});
-				solve(o);
+				reject(msg);
 				self.notifyAndUnlock(start, msg);
 			});
 		} catch (err) {
