@@ -1,26 +1,27 @@
 require('malta').checkExec('babel');
 
-var path = require('path'),
+const path = require('path'),
 	fs = require('fs'),
 	child_process = require('child_process');
 
 function malta_es6(o, options) {
-	var self = this,
+	const self = this,
 		start = new Date(),
-		msg,
 		outname = o.name.replace(/\.(ts|coffee)$/, '.js'),
 		pluginName = path.basename(path.dirname(__filename)),
-		args = [o.name, '-o', outname];
+        args = [o.name, '-o', outname];
+        
+	let msg;
 
 	options = options || {};
 	if ('plugins' in options) args.push('--plugins', options.plugins);
 	if ('presets' in options) args.push('--presets', options.presets);
 
-	return function (solve, reject){
-		var doDelete = !!(o.name.match(/\.(ts|coffee)$/));
+	return (solve, reject) => {
+		const doDelete = !!(o.name.match(/\.(ts|coffee)$/));
 		try {
-			var ls = child_process.spawn('babel', args);
-			ls.on('exit', function (code) {
+			const ls = child_process.spawn('babel', args);
+			ls.on('exit', code => {
 				if (code == 0) {
 					o.content = fs.readFileSync(outname) + "";
 					msg = 'plugin ' + pluginName.white() + ' wrote ' + outname;
@@ -29,7 +30,7 @@ function malta_es6(o, options) {
 					self.notifyAndUnlock(start, msg);
 				}
 			});
-			ls.stderr.on('data', function(err) {
+			ls.stderr.on('data', err => {
 				console.log("ERROR".red());
 				msg = 'plugin ' + pluginName.white() + ' compilation error';
 				console.log((err+"").white());
