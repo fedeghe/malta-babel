@@ -1,47 +1,75 @@
-require('malta').checkExec('babel');
 
-const path = require('path'),
-	fs = require('fs'),
-	child_process = require('child_process');
+const babel = require('@babel/core'),
+path = require('path'),
+fs = require('fs');
 
-function malta_es6(o, options) {
-	const self = this,
-		start = new Date(),
-		outname = o.name.replace(/\.(ts|coffee)$/, '.js'),
-		pluginName = path.basename(path.dirname(__filename)),
-        args = [o.name, '-o', outname];
-        
-	let msg;
+function malta_babel(obj, options) {
+const self = this,
+    start = new Date(),
+    oldName = obj.name, 
+    rx = /\.(ts|jsx)$/,
+    configPath = self.execDir + '/',
+    pluginName = path.basename(path.dirname(__filename));
 
-	options = options || {};
-	if ('plugins' in options) args.push('--plugins', options.plugins);
-	if ('presets' in options) args.push('--presets', options.presets);
+let msg;
+obj.name = obj.name.replace(rx, '.js'),
 
-	return (solve, reject) => {
-		const doDelete = !!(o.name.match(/\.(ts|coffee)$/));
-		try {
-			const ls = child_process.spawn('babel', args);
-			ls.on('exit', code => {
-				if (code == 0) {
-					o.content = fs.readFileSync(outname) + "";
-					msg = 'plugin ' + pluginName.white() + ' wrote ' + outname;
-					doDelete && fs.unlink(o.name, () => {});
-					solve(o);
-					self.notifyAndUnlock(start, msg);
-				}
-			});
-			ls.stderr.on('data', err => {
-				console.log("ERROR".red());
-				msg = 'plugin ' + pluginName.white() + ' compilation error';
-				console.log((err+"").white());
-				doDelete && fs.unlink(o.name, () => {});
-				reject(msg);
-				self.notifyAndUnlock(start, msg);
-			});
-		} catch (err) {
-			self.doErr(err, o, pluginName);
-		}
-	};
+options = options || {};
+
+return (solve, reject) => {
+    const doDelete = !!(oldName.match(rx));
+    if (options.config) {
+        try {
+            fs.readFile(configPath + options.config, 'utf8', (err, data) => {
+                if (err) throw err;
+                const config = JSON.parse(data)
+                obj.content = babel.transform(obj.content, config).code;
+                fs.writeFile(obj.name, obj.content, err => {
+                    if (err) {
+                        self.doErr(err, obj, pluginName);
+                    }
+                    msg = 'plugin ' + pluginName.white() + ' wrote ' + obj.name + ' (' + self.getSize(obj.name) + ')';
+                    err
+                        ? reject(`Plugin ${pluingName} write error:\n${err}`)
+                        : solve(obj);
+                    self.notifyAndUnlock(start, msg);
+                    doDelete && fs.unlink(oldName, () => { });
+                });
+            })
+        } catch (err) {
+            // the config file is not readable or cant be found or is no json
+            self.doErr(err, obj, pluginName);
+            doDelete && fs.unlink(oldName, () => { });
+            msg = `Plugin ${pluingName} error:\n${err}`
+            reject(msg);
+            self.notifyAndUnlock(start, msg);
+        }
+    } else {
+        obj.content = babel.transform(obj.content).code;
+        console.log(obj.content)
+        try {
+            fs.writeFile(obj.name, obj.content, err => {
+                if (err) {
+                    self.doErr(err, o, pluginName);
+                }
+                msg = 'plugin ' + pluginName.white() + ' wrote ' + obj.name + ' (' + self.getSize(obj.name) + ')';
+                err
+                    ? reject(`Plugin ${pluingName} write error:\n${err}`)
+                    : solve(obj);
+                self.notifyAndUnlock(start, msg);
+                doDelete && fs.unlink(oldName, () => { });
+            });
+        } catch (err) {
+            // whatever 
+            self.doErr(err, obj, pluginName);
+            doDelete && fs.unlink(oldName, () => { });
+            msg = `Plugin ${pluingName} error:\n${err}`
+            reject(msg);
+            self.notifyAndUnlock(start, msg);
+        }
+    }
+};
+
 }
-malta_es6.ext = ['js', 'coffee', 'ts'];
-module.exports = malta_es6;
+malta_babel.ext = ['js', 'ts', 'jsx'];
+module.exports = malta_babel;
