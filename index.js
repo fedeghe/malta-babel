@@ -23,7 +23,7 @@ return (solve, reject) => {
             fs.readFile(configPath + options.config, 'utf8', (err, data) => {
                 if (err) throw err;
                 const config = JSON.parse(data)
-                obj.content = babel.transform(obj.content, config).code;
+                obj.content = babel.transformSync(obj.content, config).code;
                 fs.writeFile(obj.name, obj.content, err => {
                     if (err) {
                         self.doErr(err, obj, pluginName);
@@ -45,8 +45,7 @@ return (solve, reject) => {
             self.notifyAndUnlock(start, msg);
         }
     } else {
-        obj.content = babel.transform(obj.content).code;
-        console.log(obj.content)
+        obj.content = babel.transformSync(obj.content).code;
         try {
             fs.writeFile(obj.name, obj.content, err => {
                 if (err) {
